@@ -1,0 +1,32 @@
+# Tuprules
+
+include build.config
+
+PROJECT_TOP = $(TUP_CWD)
+
+CC = avr-g++
+OBJDUMP = avr-objdump
+OBJCOPY = avr-objcopy
+
+MMCU = $(mcu)
+FREQ = $(freq)
+
+CFLAGS = -I$(TUP_CWD)/lib/nbavr/src/
+CFLAGS += -Wall
+CFLAGS += -Wextra
+CFLAGS += -Werror
+CFLAGS += -ffunction-sections
+CFLAGS += -g
+CFLAGS += -std=c++17
+CFLAGS += -Os
+CFLAGS += -mmcu=$(MMCU)
+CFLAGS += -Wl,-gc-sections
+CFLAGS += -fdiagnostics-color=always
+CFLAGS += -Wno-unused-parameter
+CFLAGS += -Wno-unused-function
+CFLAGS += -Wno-unused-variable
+CFLAGS += -Wno-unused-local-typedefs
+CFLAGS += -flto
+CFLAGS += -ffreestanding
+CFLAGS += -fno-exceptions
+CFLAGS += -fmax-errors=3

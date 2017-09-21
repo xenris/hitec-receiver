@@ -1,0 +1,12 @@
+# Tupfile
+
+include_rules
+
+# Compile source to elf.
+: src/main.cpp |> $(CC) $(CFLAGS) -o %o %f |> gen/firmware.elf
+
+# Copy to hex.
+: gen/firmware.elf |> $(OBJCOPY) -O ihex %f %o |> gen/%B.hex
+
+# Decompile elf to asm, for debugging.
+: gen/firmware.elf |> $(OBJDUMP) -S --architecture=avr --disassemble %f > %o |> gen/%B.asm
