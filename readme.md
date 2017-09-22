@@ -17,9 +17,16 @@ Running at either 4MHz or 8MHz.
 
 ### Serial in
 
-#### 21 bytes in
+#### 21 bytes in for standard data
 
 * 2x  0xFF
+* 18x 0x__ (9x uint16_t values)
+* 1x  0xEE
+
+#### 21 bytes in for fail-safe
+
+* 1x  0xFF
+* 1x  0xBB
 * 18x 0x__ (9x uint16_t values)
 * 1x  0xEE
 

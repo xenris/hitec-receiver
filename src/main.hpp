@@ -4,6 +4,6 @@
 #include <nbavr.hpp>
 
 #include "serial.hpp"
-#include "servos.hpp"
+#include "servo.hpp"
 
 #endif

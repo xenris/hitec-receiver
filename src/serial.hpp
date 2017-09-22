@@ -3,25 +3,29 @@
 
 template <class Clock, class Usart, uint32_t CpuFreq, uint32_t Baud>
 struct Serial : nbavr::Task<Clock> {
-    static constexpr uint8_t MaxChannels = 9;
+    static constexpr uint8_t NumChannels = 9;
+    static constexpr uint8_t StartCode = 0xFF;
+    static constexpr uint8_t PositionCode = 0xFF;
+    static constexpr uint8_t FailsafeCode = 0xBB;
+    static constexpr uint8_t EndCode = 0xEE;
 
-    uint16_t (&values)[9];
-    nbavr::Task<Clock>* servos;
-    nbavr::Queue<uint8_t, 10> out;
+    uint16_t (&positions)[NumChannels];
+    uint16_t (&positionsFailsafe)[NumChannels];
+    bool& positionsUpdated;
+    nbavr::Task<Clock>* servoTask;
     nbavr::Queue<uint8_t, 21> in;
 
-    Serial(uint16_t (&values)[9], nbavr::Task<Clock>* servos) : values(values), servos(servos) {
+    Serial(uint16_t (&positions)[NumChannels], uint16_t (&positionsFailsafe)[NumChannels], bool& positionsUpdated, nbavr::Task<Clock>* servoTask)
+    : positions(positions), positionsFailsafe(positionsFailsafe), positionsUpdated(positionsUpdated), servoTask(servoTask) {
         const uint16_t ubrr = (CpuFreq / (16 * Baud)) - 1;
 
         block {
             Usart::baud(ubrr);
             Usart::use2X(false);
             Usart::characterSize(Usart::CharacterSize::Size8);
-            // Usart::transmitterEnable(true);
             Usart::receiverEnable(true);
             Usart::rxCompleteIntEnable(true);
             Usart::rxCompleteCallback(usartRxComplete, this);
-            // Usart::dataRegisterEmptyCallback(usartDataRegisterEmpty, this);
         }
     }
 
@@ -32,33 +36,37 @@ struct Serial : nbavr::Task<Clock> {
         uint8_t b = 0;
 
         if(in.pop(&b)) {
-            if((b == 0xFF) && (p == 0xFF)) {
+            if((b == PositionCode) && (p == StartCode)) {
                 i = 0;
-            } else if(i < (2 * MaxChannels)) {
-                if((i % 2) == 1) {
+            } else if(i < (2 * NumChannels)) {
+                if(odd(i)) {
                     uint16_t w = (uint16_t(p) << 8) | b;
                     uint8_t v = i / 2;
 
-                    if(v < 9) {
+                    if(v < NumChannels) {
                         atomic {
-                            values[v] = w;
+                            positions[v] = w;
                         }
                     }
-                } else if(b == 0xEE) {
-                    servos->wake();
-
-                    i = 200;
                 }
 
                 i++;
-            } else if(i == (2 * MaxChannels)) {
-                servos->wake();
+            } else if(i == (2 * NumChannels)) {
+                if(b == EndCode) {
+                    positionsUpdated = true;
+
+                    servoTask->wake();
+                }
 
                 i = 200;
             }
 
             p = b;
         }
+    }
+
+    static force_inline bool odd(int8_t n) {
+        return n & 1;
     }
 
     static void usartRxComplete(void* data) {
@@ -69,20 +77,24 @@ struct Serial : nbavr::Task<Clock> {
         self->in.push_(c);
     }
 
-    // static void usartDataRegisterEmpty(void* data) {
-    //     Serial* self = (Serial*)data;
+    // static void debug(uint8_t b) {
+    //     atomic {
+    //         for(int8_t j = 0; j < 8; j++) {
+    //             block nbavr::PinC1::output(nbavr::Value::High);
     //
-    //     uint8_t d;
+    //             if(b & 0x80) {
+    //                 Clock::template delay<4000>();
+    //             } else {
+    //                 Clock::template delay<500>();
+    //             }
     //
-    //     if(self->out.pop_(&d)) {
-    //         Usart::push(d);
-    //     } else {
-    //         Usart::dataRegisterEmptyIntEnable(false);
+    //             block nbavr::PinC1::output(nbavr::Value::Low);
+    //
+    //             Clock::template delay<1000>();
+    //
+    //             b <<= 1;
+    //         }
     //     }
-    // }
-
-    // static void outNotify(void* data) {
-    //     Usart::dataRegisterEmptyIntEnable(true);
     // }
 };
 

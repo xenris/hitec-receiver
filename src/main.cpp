@@ -10,7 +10,8 @@ INCLUDE_USART_CALLBACK(0, DE);
 
 void main() {
     const uint32_t CpuFreq = 7372800;
-    const uint32_t BaudRate = 115200;
+    const uint32_t Baud = 115200;
+    const uint8_t NumChannels = 9;
 
     struct Channels {
         using Ch1Pin = nbavr::PinC1;
@@ -30,12 +31,14 @@ void main() {
 
     using Clock = nbavr::Clock<SystemTimer, CpuFreq>;
 
-    static uint16_t values[9] = {};
+    static uint16_t positions[NumChannels];
+    static uint16_t positionsFailsafe[NumChannels];
+    static bool positionsUpdated = false;
 
-    static Servos<Clock, Channels, ServoTimer> servos(values);
-    static Serial<Clock, SerialUsart, CpuFreq, BaudRate> serial(values, &servos);
+    static Servo<Clock, Channels, ServoTimer> servo(positions, positionsFailsafe, positionsUpdated);
+    static Serial<Clock, SerialUsart, CpuFreq, Baud> serial(positions, positionsFailsafe, positionsUpdated, &servo);
 
-    static nbavr::Task<Clock>* tasks[] = {&servos, &serial};
+    static nbavr::Task<Clock>* tasks[] = {&servo, &serial};
 
     nbavr::TaskManager<Clock> tm(tasks);
 }

@@ -1,15 +1,23 @@
-#ifndef SERVOS_HPP
-#define SERVOS_HPP
+#ifndef SERVO_HPP
+#define SERVO_HPP
 
 #include <nbavr.hpp>
 
 template <class Clock, class Channels, class Timer>
-struct Servos : nbavr::Task<Clock> {
-    uint16_t (&values)[9];
+struct Servo : nbavr::Task<Clock> {
+    static constexpr uint8_t NumChannels = 9;
+    static constexpr uint16_t PositionMin = 6635;
+    static constexpr uint16_t PositionMax = 15482;
+    static constexpr uint16_t PulsePreempt = 200;
+
+    uint16_t (&positions)[NumChannels];
+    uint16_t (&positionsFailsafe)[NumChannels];
+    bool& positionsUpdated;
     bool ppmMode = false;
     int8_t currentChannel = 1;
 
-    Servos(uint16_t (&values)[9]) : values(values) {
+    Servo(uint16_t (&positions)[NumChannels], uint16_t (&positionsFailsafe)[NumChannels], bool& positionsUpdated)
+    : positions(positions), positionsFailsafe(positionsFailsafe), positionsUpdated(positionsUpdated) {
         // Check for pulldown plug on channel 1.
 
         block Channels::Ch1Pin::direction(nbavr::Direction::Output);
@@ -61,12 +69,16 @@ struct Servos : nbavr::Task<Clock> {
     // OutputCompareA is the indicator that the end of pulse is near.
     // OutputCompareB is the time when the pulse needs to end.
     void loop() override {
+        if(!positionsUpdated) {
+            nbavr::copy(positionsFailsafe, positions, NumChannels);
+        }
+
         atomic {
             currentChannel = 1;
 
-            int16_t pulseTime = nbavr::clip(int16_t(values[0]), 6635, 15482);
+            int16_t pulseTime = nbavr::clip(positions[0], PositionMin, PositionMax);
 
-            block Timer::OutputCompareA::value(pulseTime - 200);
+            block Timer::OutputCompareA::value(pulseTime - PulsePreempt);
             block Timer::OutputCompareB::value(pulseTime);
 
             block Timer::counter(0);
@@ -83,11 +95,17 @@ struct Servos : nbavr::Task<Clock> {
             }
         }
 
-        this->sleep();
+        if(positionsUpdated) {
+            this->sleep(Clock::millisToTicks(500));
+
+            positionsUpdated = false;
+        } else {
+            this->sleep(Clock::millisToTicks(20));
+        }
     }
 
     static void nearPulseCallback(void* data) {
-        auto* self = (Servos*)data;
+        auto* self = (Servo*)data;
 
         while(!Timer::OutputCompareB::intFlag());
 
@@ -102,10 +120,10 @@ struct Servos : nbavr::Task<Clock> {
 
         self->currentChannel++;
 
-        if(self->currentChannel <= 8) {
-            int16_t nextPulseTime = nbavr::clip(int16_t(self->values[self->currentChannel - 1]), 6635, 15482);
+        if(self->currentChannel < NumChannels) {
+            int16_t nextPulseTime = nbavr::clip(self->positions[self->currentChannel - 1], PositionMin, PositionMax);
 
-            block Timer::OutputCompareA::value(nextPulseTime - 200);
+            block Timer::OutputCompareA::value(nextPulseTime - PulsePreempt);
             block Timer::OutputCompareB::value(nextPulseTime);
         } else {
             block Timer::clock(Timer::Clock::None);
