@@ -62,7 +62,7 @@ struct Servo : nbavr::Task<Clock> {
         Timer::OutputCompareA::mode(Timer::OutputCompareA::Mode::Disconnected);
         Timer::OutputCompareB::mode(Timer::OutputCompareB::Mode::Disconnected);
 
-        this->sleep(Clock::millisToTicks(500));
+        this->sleep();
     }
 
     // Serial will wake this task when there is new data, once every 20ms.
