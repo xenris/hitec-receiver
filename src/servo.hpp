@@ -19,17 +19,16 @@ struct Servo : nbavr::Task<Clock> {
 
     Servo(uint16_t (&positions)[NumChannels], uint16_t (&positionsFailsafe)[NumChannels], bool& failsafeEnabled, bool& positionsUpdated)
     : positions(positions), positionsFailsafe(positionsFailsafe), failsafeEnabled(failsafeEnabled), positionsUpdated(positionsUpdated) {
-        // Check for pulldown plug on channel 1.
+        // Check for pullup plug on channel 1.
+        // Servos' signal leads are grounded.
 
         block Channels::Ch1Pin::direction(nbavr::Direction::Output);
-        block Channels::Ch1Pin::output(nbavr::Value::High);
+        block Channels::Ch1Pin::output(nbavr::Value::Low);
         block Channels::Ch1Pin::direction(nbavr::Direction::Input);
 
-        Clock::template delay<10000>();
+        Clock::template delay<1000>();
 
-        ppmMode = Channels::Ch1Pin::input() == nbavr::Value::Low;
-
-        block Channels::Ch1Pin::pullup(false);
+        ppmMode = Channels::Ch1Pin::input() == nbavr::Value::High;
 
         // Set channels to ppm or pwm.
 
@@ -63,7 +62,7 @@ struct Servo : nbavr::Task<Clock> {
         Timer::OutputCompareA::mode(Timer::OutputCompareA::Mode::Disconnected);
         Timer::OutputCompareB::mode(Timer::OutputCompareB::Mode::Disconnected);
 
-        this->sleep();
+        this->sleep(Clock::millisToTicks(500));
     }
 
     // Serial will wake this task when there is new data, once every 20ms.
