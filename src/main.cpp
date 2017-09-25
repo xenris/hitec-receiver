@@ -34,9 +34,12 @@ void main() {
     static uint16_t positions[NumChannels];
     static uint16_t positionsFailsafe[NumChannels];
     static bool positionsUpdated = false;
+    static bool failsafeEnabled = false;
 
-    static Servo<Clock, Channels, ServoTimer> servo(positions, positionsFailsafe, positionsUpdated);
-    static Serial<Clock, SerialUsart, CpuFreq, Baud> serial(positions, positionsFailsafe, positionsUpdated, &servo);
+    loadFailsafeData(positionsFailsafe, failsafeEnabled);
+
+    static Servo<Clock, Channels, ServoTimer> servo(positions, positionsFailsafe, failsafeEnabled, positionsUpdated);
+    static Serial<Clock, SerialUsart, CpuFreq, Baud> serial(positions, positionsFailsafe, failsafeEnabled, positionsUpdated, &servo);
 
     static nbavr::Task<Clock>* tasks[] = {&servo, &serial};
 

@@ -1,22 +1,25 @@
 #ifndef SERIAL_HPP
 #define SERIAL_HPP
 
+#include "eeprom.hpp"
+
 template <class Clock, class Usart, uint32_t CpuFreq, uint32_t Baud>
 struct Serial : nbavr::Task<Clock> {
     static constexpr uint8_t NumChannels = 9;
     static constexpr uint8_t StartCode = 0xFF;
     static constexpr uint8_t PositionCode = 0xFF;
-    static constexpr uint8_t FailsafeCode = 0xBB;
+    static constexpr uint8_t FailsafeCode = 0xDD;
     static constexpr uint8_t EndCode = 0xEE;
 
     uint16_t (&positions)[NumChannels];
     uint16_t (&positionsFailsafe)[NumChannels];
+    bool& failsafeEnabled;
     bool& positionsUpdated;
     nbavr::Task<Clock>* servoTask;
     nbavr::Queue<uint8_t, 21> in;
 
-    Serial(uint16_t (&positions)[NumChannels], uint16_t (&positionsFailsafe)[NumChannels], bool& positionsUpdated, nbavr::Task<Clock>* servoTask)
-    : positions(positions), positionsFailsafe(positionsFailsafe), positionsUpdated(positionsUpdated), servoTask(servoTask) {
+    Serial(uint16_t (&positions)[NumChannels], uint16_t (&positionsFailsafe)[NumChannels], bool& failsafeEnabled, bool& positionsUpdated, nbavr::Task<Clock>* servoTask)
+    : positions(positions), positionsFailsafe(positionsFailsafe), failsafeEnabled(failsafeEnabled), positionsUpdated(positionsUpdated), servoTask(servoTask) {
         const uint16_t ubrr = (CpuFreq / (16 * Baud)) - 1;
 
         block {
@@ -32,12 +35,22 @@ struct Serial : nbavr::Task<Clock> {
     void loop() override {
         static uint8_t i = 200;
         static uint8_t p = 0;
+        static bool f = false;
 
         uint8_t b = 0;
 
         if(in.pop(&b)) {
             if((b == PositionCode) && (p == StartCode)) {
                 i = 0;
+
+                if(f) {
+                    saveFailsafeData(positionsFailsafe, failsafeEnabled);
+
+                    f = false;
+                }
+            } else if((b == FailsafeCode) && (p == StartCode)) {
+                i = 0;
+                f = true;
             } else if(i < (2 * NumChannels)) {
                 if(odd(i)) {
                     uint16_t w = (uint16_t(p) << 8) | b;
@@ -46,6 +59,10 @@ struct Serial : nbavr::Task<Clock> {
                     if(v < NumChannels) {
                         atomic {
                             positions[v] = w;
+                        }
+
+                        if(f) {
+                            positionsFailsafe[v] = w;
                         }
                     }
                 }

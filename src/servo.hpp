@@ -12,12 +12,13 @@ struct Servo : nbavr::Task<Clock> {
 
     uint16_t (&positions)[NumChannels];
     uint16_t (&positionsFailsafe)[NumChannels];
+    bool& failsafeEnabled;
     bool& positionsUpdated;
     bool ppmMode = false;
     int8_t currentChannel = 1;
 
-    Servo(uint16_t (&positions)[NumChannels], uint16_t (&positionsFailsafe)[NumChannels], bool& positionsUpdated)
-    : positions(positions), positionsFailsafe(positionsFailsafe), positionsUpdated(positionsUpdated) {
+    Servo(uint16_t (&positions)[NumChannels], uint16_t (&positionsFailsafe)[NumChannels], bool& failsafeEnabled, bool& positionsUpdated)
+    : positions(positions), positionsFailsafe(positionsFailsafe), failsafeEnabled(failsafeEnabled), positionsUpdated(positionsUpdated) {
         // Check for pulldown plug on channel 1.
 
         block Channels::Ch1Pin::direction(nbavr::Direction::Output);
@@ -69,6 +70,12 @@ struct Servo : nbavr::Task<Clock> {
     // OutputCompareA is the indicator that the end of pulse is near.
     // OutputCompareB is the time when the pulse needs to end.
     void loop() override {
+        if(!positionsUpdated && !failsafeEnabled) {
+            this->sleep(Clock::millisToTicks(500));
+
+            return;
+        }
+
         if(!positionsUpdated) {
             nbavr::copy(positionsFailsafe, positions, NumChannels);
         }
@@ -120,6 +127,7 @@ struct Servo : nbavr::Task<Clock> {
 
         self->currentChannel++;
 
+        // Limited to NumChannels - 1 (8) Channels.
         if(self->currentChannel < NumChannels) {
             int16_t nextPulseTime = nbavr::clip(self->positions[self->currentChannel - 1], PositionMin, PositionMax);
 

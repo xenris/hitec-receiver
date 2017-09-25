@@ -3,6 +3,7 @@
 
 #include <nbavr.hpp>
 
+#include "eeprom.hpp"
 #include "serial.hpp"
 #include "servo.hpp"
 
