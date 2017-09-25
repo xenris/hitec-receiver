@@ -16,7 +16,7 @@ struct Serial : nbavr::Task<Clock> {
     bool& failsafeEnabled;
     bool& positionsUpdated;
     nbavr::Task<Clock>* servoTask;
-    nbavr::Queue<uint8_t, 21> in;
+    nbavr::Queue<uint8_t, 21 * 3> in;
 
     Serial(uint16_t (&positions)[NumChannels], uint16_t (&positionsFailsafe)[NumChannels], bool& failsafeEnabled, bool& positionsUpdated, nbavr::Task<Clock>* servoTask)
     : positions(positions), positionsFailsafe(positionsFailsafe), failsafeEnabled(failsafeEnabled), positionsUpdated(positionsUpdated), servoTask(servoTask) {
