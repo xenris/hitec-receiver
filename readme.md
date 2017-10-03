@@ -1,5 +1,10 @@
 # Hitec Receiver PPM firmware
 
+Firmware for Hitec receivers to add an 8 channel PPM mode.
+
+Caution: Use at your own risk. If you don't know what you are doing you could
+potentially ruin your receiver.
+
 ## Notes
 
 ### Fuses
@@ -13,7 +18,7 @@
 * BODLEVEL1 enabled
 * CKSEL1 enabled
 
-Running at either 4MHz or 8MHz.
+Running at 7.3728MHz.
 
 ### Serial in
 
@@ -32,7 +37,7 @@ Running at either 4MHz or 8MHz.
 
 ### PWM - PPM
 
-To enable PPM mode, ground the output pin on channel 1 before turning on.
+To enable PPM mode, connect the output pin on channel 1 to V+ before turning on.
 
 ### Channels
 
