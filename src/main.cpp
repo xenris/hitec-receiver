@@ -29,7 +29,7 @@ void main() {
     using SystemTimer = nbavr::hw::TimerCounter0;
     using ServoTimer = nbavr::hw::TimerCounter1;
 
-    using Clock = nbavr::Clock<SystemTimer, CpuFreq>;
+    using Clock = nbavr::Clock<SystemTimer, CpuFreq, 0>;
 
     static uint16_t positions[NumChannels];
     static uint16_t positionsFailsafe[NumChannels];
