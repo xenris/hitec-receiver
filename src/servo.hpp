@@ -22,36 +22,36 @@ struct Servo : nbavr::Task<Clock> {
         // Check for pullup plug on channel 1.
         // Servos' signal leads are grounded.
 
-        block Channels::Ch1Pin::direction(nbavr::Direction::Output);
-        block Channels::Ch1Pin::output(nbavr::Value::Low);
-        block Channels::Ch1Pin::direction(nbavr::Direction::Input);
+        block Channels::Ch1Pin::direction(nbavr::hw::Direction::Output);
+        block Channels::Ch1Pin::output(nbavr::hw::Value::Low);
+        block Channels::Ch1Pin::direction(nbavr::hw::Direction::Input);
 
         Clock::template delay<1000>();
 
-        ppmMode = Channels::Ch1Pin::input() == nbavr::Value::High;
+        ppmMode = Channels::Ch1Pin::input() == nbavr::hw::Value::High;
 
         // Set channels to ppm or pwm.
 
         if(ppmMode) {
-            Channels::Ch1Pin::direction(nbavr::Direction::Input);
-            Channels::Ch2Pin::direction(nbavr::Direction::Output);
-            Channels::Ch3Pin::direction(nbavr::Direction::Input);
-            Channels::Ch4Pin::direction(nbavr::Direction::Input);
-            Channels::Ch5Pin::direction(nbavr::Direction::Input);
-            Channels::Ch6Pin::direction(nbavr::Direction::Input);
-            // Channels::Ch7Pin::direction(nbavr::Direction::Input);
-            // Channels::Ch8Pin::direction(nbavr::Direction::Input);
-            // Channels::Ch9Pin::direction(nbavr::Direction::Input);
+            Channels::Ch1Pin::direction(nbavr::hw::Direction::Input);
+            Channels::Ch2Pin::direction(nbavr::hw::Direction::Output);
+            Channels::Ch3Pin::direction(nbavr::hw::Direction::Input);
+            Channels::Ch4Pin::direction(nbavr::hw::Direction::Input);
+            Channels::Ch5Pin::direction(nbavr::hw::Direction::Input);
+            Channels::Ch6Pin::direction(nbavr::hw::Direction::Input);
+            // Channels::Ch7Pin::direction(nbavr::hw::Direction::Input);
+            // Channels::Ch8Pin::direction(nbavr::hw::Direction::Input);
+            // Channels::Ch9Pin::direction(nbavr::hw::Direction::Input);
         } else {
-            Channels::Ch1Pin::direction(nbavr::Direction::Output);
-            Channels::Ch2Pin::direction(nbavr::Direction::Output);
-            Channels::Ch3Pin::direction(nbavr::Direction::Output);
-            Channels::Ch4Pin::direction(nbavr::Direction::Output);
-            Channels::Ch5Pin::direction(nbavr::Direction::Output);
-            Channels::Ch6Pin::direction(nbavr::Direction::Output);
-            // Channels::Ch7Pin::direction(nbavr::Direction::Output);
-            // Channels::Ch8Pin::direction(nbavr::Direction::Output);
-            // Channels::Ch9Pin::direction(nbavr::Direction::Output);
+            Channels::Ch1Pin::direction(nbavr::hw::Direction::Output);
+            Channels::Ch2Pin::direction(nbavr::hw::Direction::Output);
+            Channels::Ch3Pin::direction(nbavr::hw::Direction::Output);
+            Channels::Ch4Pin::direction(nbavr::hw::Direction::Output);
+            Channels::Ch5Pin::direction(nbavr::hw::Direction::Output);
+            Channels::Ch6Pin::direction(nbavr::hw::Direction::Output);
+            // Channels::Ch7Pin::direction(nbavr::hw::Direction::Output);
+            // Channels::Ch8Pin::direction(nbavr::hw::Direction::Output);
+            // Channels::Ch9Pin::direction(nbavr::hw::Direction::Output);
         }
 
         Timer::clock(Timer::Clock::None);
@@ -97,7 +97,7 @@ struct Servo : nbavr::Task<Clock> {
             if(ppmMode) {
                 ppmPulse();
             } else {
-                setChannelPin(1, nbavr::Value::High);
+                setChannelPin(1, nbavr::hw::Value::High);
             }
         }
 
@@ -120,8 +120,8 @@ struct Servo : nbavr::Task<Clock> {
         if(self->ppmMode) {
             ppmPulse();
         } else {
-            setChannelPin(self->currentChannel, nbavr::Value::Low);
-            setChannelPin(self->currentChannel + 1, nbavr::Value::High);
+            setChannelPin(self->currentChannel, nbavr::hw::Value::Low);
+            setChannelPin(self->currentChannel + 1, nbavr::hw::Value::High);
         }
 
         self->currentChannel++;
@@ -143,14 +143,14 @@ struct Servo : nbavr::Task<Clock> {
     }
 
     static force_inline void ppmPulse() {
-        block setChannelPin(2, nbavr::Value::High);
+        block setChannelPin(2, nbavr::hw::Value::High);
 
         Clock::template delay<10000>();
 
-        block setChannelPin(2, nbavr::Value::Low);
+        block setChannelPin(2, nbavr::hw::Value::Low);
     }
 
-    static force_inline void setChannelPin(int8_t channel, nbavr::Value value) {
+    static force_inline void setChannelPin(int8_t channel, nbavr::hw::Value value) {
         switch(channel) {
         case 1:
             Channels::Ch1Pin::output(value);

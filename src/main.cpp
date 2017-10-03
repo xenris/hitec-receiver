@@ -14,20 +14,20 @@ void main() {
     const uint8_t NumChannels = 9;
 
     struct Channels {
-        using Ch1Pin = nbavr::PinC1;
-        using Ch2Pin = nbavr::PinC0;
-        using Ch3Pin = nbavr::PinD4;
-        using Ch4Pin = nbavr::PinD3;
-        using Ch5Pin = nbavr::PinD2;
-        using Ch6Pin = nbavr::PinC2;
-        // using Ch7Pin = nbavr::PinC3;
-        // using Ch8Pin = nbavr::PinC4;
-        // using Ch9Pin = nbavr::PinC5;
+        using Ch1Pin = nbavr::hw::PinC1;
+        using Ch2Pin = nbavr::hw::PinC0;
+        using Ch3Pin = nbavr::hw::PinD4;
+        using Ch4Pin = nbavr::hw::PinD3;
+        using Ch5Pin = nbavr::hw::PinD2;
+        using Ch6Pin = nbavr::hw::PinC2;
+        // using Ch7Pin = nbavr::hw::PinC3;
+        // using Ch8Pin = nbavr::hw::PinC4;
+        // using Ch9Pin = nbavr::hw::PinC5;
     };
 
-    using SerialUsart = nbavr::Usart0;
-    using SystemTimer = nbavr::TimerCounter0;
-    using ServoTimer = nbavr::TimerCounter1;
+    using SerialUsart = nbavr::hw::Usart0;
+    using SystemTimer = nbavr::hw::TimerCounter0;
+    using ServoTimer = nbavr::hw::TimerCounter1;
 
     using Clock = nbavr::Clock<SystemTimer, CpuFreq>;
 
