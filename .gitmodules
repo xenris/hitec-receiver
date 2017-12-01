@@ -1,0 +1,3 @@
+[submodule "lib/nbavr"]
+	path = lib/nbavr
+	url = https://github.com/xenris/nbavr.git
