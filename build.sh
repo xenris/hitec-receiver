@@ -18,9 +18,10 @@ if [ $avr_tools ]; then
     fi
 fi
 
-# Clone nbavr if it doesn't exist.
-if [ ! -d "lib/nbavr/" ]; then
-    git clone https://github.com/xenris/nbavr.git lib/nbavr/
+# Make sure nbavr is initialised.
+if [[ $(git submodule status lib/nbavr) =~ ^-.* ]]; then
+    git submodule init lib/nbavr
+    git submodule update lib/nbavr
 fi
 
 elf="gen/firmware.elf"
@@ -95,9 +96,7 @@ for ((i = 0; i < ${#args}; i++)); do
         echo "Updating nbavr"
         echo "---------------------------------"
 
-        cd lib/nbavr/
-        git pull
-        cd ../../
+        git submodule update --remote lib/nbavr
 
         ;;
     ' ')
